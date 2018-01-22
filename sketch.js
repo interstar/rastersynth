@@ -277,17 +277,36 @@ const waveform = (p) => {
 };
 
 
+function addRampEffect(wavetable) {
+    let ramplength = wavetable.length * 0.01;
+    let rampstep = 1/ramplength;
+
+    for (let i=0, dampen = rampstep; i<ramplength; i++, dampen+=rampstep) {
+        wavetable[i] *= dampen;
+        wavetable[wavetable.length-1 - i] *= dampen;
+    }
+
+    return wavetable;
+}
+
+
 
 function play() {
     marquee.img.loadPixels();
     let pixels = marquee.img.pixels;
 
     let wavetable = [];
+    // let avgpower = 0;
     for (let i=synth.readOffset, j=0; i<pixels.length; i+=4, j++) {
         wavetable[j] = pixels[i] / 256;
+        // wavetable[j] = pixels[i];
+        // avgpower += pixels[i];
     }
 
-    synth.wavetable = wavetable;
+    // avgpower /= wavetable.length;
+    // wavetable = wavetable.map(x => x/avgpower);
+
+    synth.wavetable = addRampEffect(wavetable);
 }
 
 
