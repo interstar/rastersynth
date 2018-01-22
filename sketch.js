@@ -163,23 +163,26 @@ const picture = function(p) {
             /* use r, g, b to specify the sonification channel */
             [/* r */ 82, () => synth.readOffset = 0 ],
             [/* r */ 71, () => synth.readOffset = 1 ],
-            [/* r */ 66, () => synth.readOffset = 2 ]
-        ]);
+            [/* r */ 66, () => synth.readOffset = 2 ],
 
-    const keyPressedActions = new Map(
-        [
             /* use -, =, 0 to adjust the pitch */
 
-            [/* - */ 189, () => synth.pitch -= 1/128 ],
-            [/* = */ 187, () => synth.pitch += 1/128 ],
+            [/* - */ 189, () => synth.pitch = p.max(1/1024, synth.pitch - 1/1024) ],
+            [/* = */ 187, () => synth.pitch += 1/1024 ],
             // [/* - */ 189, () => synth.pitch *= ROOTXOF2 ],
             // [/* = */ 187, () => synth.pitch *= 1/ROOTXOF2 ],
             [/* 0 */ 48, () => synth.pitch = synth.DEFAULT_PITCH ]
-        ]
-    );
+
+        ]);
+
 
     p.preload = function() {
-        img = p.loadImage('Philips_PM5544.svg.png');
+        // img = p.loadImage('Philips_PM5544.svg.png');
+        // img = p.loadImage('bg.jpg');
+        // img = p.loadImage('DSC_6257.JPG');
+        // img = p.loadImage('DSC_6263.JPG');
+        // img = p.loadImage('IMG_20170402_120844.jpg');
+        img = p.loadImage('Wassily Kandinsky composizione viii, c.1923.jpg');
     };
 
     p.setup = function() {
@@ -189,23 +192,12 @@ const picture = function(p) {
         //domRect = canvas.getBoundingClientRect();
 
         p.image(img, 0, 0);
+        img.resize(800,600);
 
         drawMarquee();
     };
 
-    // Use this for keys&actions we don't want to autorepeat after a single press
-    p.keyReleased = (e) => {
-        for (let [key, action] of keyPressedActions) {
-            if (e.which == key) {
-                action();
-                captureMarquee();
-                break;
-            }
-        }
 
-    };
-
-    // Use this for keys&actions we want to autorepeat after a press
     const actOnKeyDown = () => {
         for (let [key, action] of keyDownActions) {
             if (p.keyIsDown(key)) {
