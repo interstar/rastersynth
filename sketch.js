@@ -16,7 +16,7 @@ class GibberishSamplerSynth {
         // let sampler = Gibberish.instruments.Sampler(options);
         let sampler = new Gibberish.Sampler();
 
-        this.DEFAULT_PITCH = 1/8;
+        this.DEFAULT_PITCH = 0.015625;
         sampler.pitch = this.DEFAULT_PITCH;
 
         sampler.loops = true;
