@@ -3,29 +3,38 @@
   <head>
     <meta name="viewport" width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0>
     <meta charset="UTF-8"> 
-    <script src="Tone.min.js"></script>
-    
+
     <style>
 
      body {padding: 0; margin: 0;}
-     .pane { height: 700px; float: left; }
+     .pane { float: left; }
 
      .left { width: 70%; }
      .right { width: 30%; }
 
-     #usage { margin: 10px; font-family: "courier" }
+     #picture { height: 700px; }
+     #marquee { height: 400px; }
+     #waveform { height: 300px; align:"center"; }
 
+     #usage { margin: 10px; font-family: "courier"; width: 65%; }
 
+     
     </style>
+    <script src="gibberish.min.js"></script>
+    <script>Gibberish.init()</script>
     <script src="p5/p5.min.js"></script>
-    <script src="p5/addons/p5.dom.min.js"></script>
-    <script src="p5/addons/p5.sound.min.js"></script>
+    <script src="p5/addons/p5.dom.js"></script>
+    <script src="p5/addons/p5.sound.js"></script>
     <script src="sketch.js"></script>
   </head>
   <body>
-      <div id="leftpane" class="left pane"></div>
-      <div id="rightpane" class="right pane"></div>
-      <div id="usage">
+      <div id="picture" class="left pane"></div>
+      <div id="marquee" class="right pane"></div>
+      <p/>
+      <div id="waveform" class= "right pane"></div>
+
+      <br/>
+      <div id="usage" class="left pane">
           e / d : expand / shrink marquee vertically
           <br/>
           s / f : shrink / expand marquee horizontally
@@ -35,7 +44,6 @@
           <br/>
           <br/>
           r / g / b : sonify the red / green / blue channel
-
       </div>
   </body>
 </html>
