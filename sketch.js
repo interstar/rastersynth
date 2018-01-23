@@ -161,17 +161,16 @@ const picture = function(p) {
             [/* e */ 69, () => marquee.ry = p.min(marquee.ry + 1, 100)],
 
             /* use r, g, b to specify the sonification channel */
+
             [/* r */ 82, () => synth.readOffset = 0 ],
             [/* r */ 71, () => synth.readOffset = 1 ],
             [/* r */ 66, () => synth.readOffset = 2 ],
 
-            /* use -, =, 0 to adjust the pitch */
+            /* use [, ], p to decrease/increase/reset the pitch */
 
-            [/* - */ 189, () => synth.pitch = p.max(1/1024, synth.pitch - 1/1024) ],
-            [/* = */ 187, () => synth.pitch += 1/1024 ],
-            // [/* - */ 189, () => synth.pitch *= ROOTXOF2 ],
-            // [/* = */ 187, () => synth.pitch *= 1/ROOTXOF2 ],
-            [/* 0 */ 48, () => synth.pitch = synth.DEFAULT_PITCH ]
+            [/* [ */ 219, () => synth.pitch = p.max(1/1024, synth.pitch - 1/1024) ],
+            [/* ] */ 221, () => synth.pitch += 1/1024 ],
+            [/* p */ 80, () => synth.pitch = synth.DEFAULT_PITCH ]
 
         ]);
 
