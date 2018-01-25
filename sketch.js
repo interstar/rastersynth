@@ -199,6 +199,7 @@ const controls = function(p) {
 window.synth = synth;
 
 function play() {
+
     marquee.img.loadPixels();
     let pixels = marquee.img.pixels;
 
@@ -208,7 +209,8 @@ function play() {
     }
 
     synth.wavetable = [wavetable, wavetable];
-
+    console.log("in play");
+    console.log(window.synth.volume + ", " + window.synth.pitch);
 }
 
 
