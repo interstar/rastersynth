@@ -170,18 +170,31 @@ const picture = function(p) {
 
             [/* [ */ 219, () => synth.pitch = p.max(1/1024, synth.pitch - 1/1024) ],
             [/* ] */ 221, () => synth.pitch += 1/1024 ],
-            [/* p */ 80, () => synth.pitch = synth.DEFAULT_PITCH ]
+            [/* p */ 80, () => synth.pitch = synth.DEFAULT_PITCH ],
+
+            /* use , / . / m to decrease/increase/reset gaussian blurRadius */
+
+            // [/* , */ 188, () => window.blurRadius = p.max(0, blurRadius - 1) ],
+            // [/* . */ 189, () => window.blurRadius += 1 ],
+            // [/* m */ 77, () => window.blurRadius = 0 ]
 
         ]);
 
 
     p.preload = function() {
-        // img = p.loadImage('Philips_PM5544.svg.png');
-        // img = p.loadImage('bg.jpg');
-        // img = p.loadImage('DSC_6257.JPG');
-        // img = p.loadImage('DSC_6263.JPG');
-        // img = p.loadImage('IMG_20170402_120844.jpg');
-        img = p.loadImage('Wassily Kandinsky composizione viii, c.1923.jpg');
+        // img = p.loadImage('images/Philips_PM5544.svg.png');
+        // img = p.loadImage('images/bg.jpg');
+        // img = p.loadImage('images/DSC_6257.JPG');
+        // img = p.loadImage('images/DSC_6263.JPG');
+        // img = p.loadImage('images/IMG_20170402_120844.jpg');
+        // img = p.loadImage('images/Wassily Kandinsky composizione viii, c.1923.jpg');
+        // img = p.loadImage('images/geometric-drawing-geometric-art.jpg');
+        // img = p.loadImage('images/Red Crane.jpg');
+        // img = p.loadImage('images/brasilia-niemeyer.jpg');
+        // img = p.loadImage('images/construction-site-with-red-crane-and-building.jpg');
+        // img = p.loadImage('images/favela-painting-rio-de-janeiro.jpg');
+        img = p.loadImage('images/hong-kong-battery.jpg');
+
     };
 
     p.setup = function() {
