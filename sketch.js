@@ -1,100 +1,106 @@
-const ROOTXOF2 = Math.pow(2,-8);
+const ROOTXOF2 = Math.pow(2,-12);
 
-const audioCtxConstructor = (window.AudioContext || window.webkitAudioContext),
-      audioCtx   = new audioCtxConstructor();
+// Gibberish.init();
 
-class WavetableSynth {
-    constructor(numSamples) {
-        let source = audioCtx.createBufferSource(),
-            buffer = audioCtx.createBuffer(2, numSamples,  audioCtx.sampleRate);
+let fft;
 
-        let channels = {
-            left: buffer.getChannelData(0),
-            write: buffer.getChannelData(1)
-        };
+function preload() {
+    fft = new p5.FFT();
+    fft.setInput(Gibberish.node);
+}
 
-        let mutedvolume;
 
-        let gain = audioCtx.createGain();
 
-        this.DEFAULT_PITCH = 1/8;
+class GibberishSamplerSynth {
+    constructor(options) {
+        // let sampler = Gibberish.instruments.Sampler(options);
+        let sampler = new Gibberish.Sampler();
 
-        source.playbackRate.value = this.DEFAULT_PITCH;
-        source.loop   = true;
-        source.buffer = buffer;
-        source.connect(gain);
-        gain.connect(audioCtx.destination);
-        source.start();
+        this.DEFAULT_PITCH = 0.015625;
+        sampler.pitch = this.DEFAULT_PITCH;
 
-        this.gain = gain;
-        this.source = source;
-        this.channels = channels;
+        sampler.loops = true;
+        sampler.playOnLoad = sampler.pitch;
+        sampler.connect();
+
+        this.sampler = sampler;
+        this.mutedvolume = undefined;
+        this.amp = 1;
+        this.id = sampler.id;
         this.readOffset = 0;
     }
 
-    set wavetable([samplesL, samplesR]) {
+    set wavetable(samples) {
+        // this.togglemute();
 
-        let left  = this.channels.left,
-            right = this.channels.right;
+        this.sampler.setBuffer(samples);
+        this.sampler.length = samples.length;
 
-        for (let i = this.readOffset, len = left.length; i < len; i++) {
-            left[i]  = samplesL[i % samplesL.length];
-            // FIXME: why does this throw an "undefined" error
-            //right[i] = samples[i % samplesR.length];
-        }
+        // this.togglemute();
+        //this.sampler.note(this.sampler.pitch);
 
-        this.source.loopEnd = samplesL.length;
+        // if (!this.sequencer.isRunning)
+        //   this.sequencer.start();
     }
 
-
     get wavetable() {
-        return [this.channels.left, this.channels.right];
+        return [this.sampler.getBuffer(), this.sampler.getBuffer()];
     }
 
 
     set pitch(pitch) {
-        this.source.playbackRate.value = pitch;
+        this.sampler.pitch = pitch;
     }
 
-    // forward compatibility
     get pitch() {
-        return this.source.playbackRate;
+        return this.sampler.pitch;
+    }
+
+    playRatechange(factor) {
+        this.sampler.pitch *= factor;
+        return this.sampler.pitch;
     }
 
 
-    pitchChangeBy(factor) {
-        var rate = this.source.playbackRate.value;
-        rate *= factor;
-        // if (rate > 1)
-        //   rate = 1;
-        this.source.playbackRate.value = rate;
-        return rate;
+
+    set amp(value) {
+        // const s = new Gibberish.Sequencer({
+        //   target:this.sampler, key:'amp',
+        //   values:[ value ],
+        //   durations:[ Gibberish.Time.ms(15) ]
+        // }).start();
+
+        this.sampler.amp = value;
     }
 
-    set volume(value) {
-        this.gain.gain.value = value;
-    }
-    get volume() {
-        return this.gain.gain.value;
+    get amp() {
+        return this.sampler.amp;
     }
 
 
     togglemute() {
         if (this.mutedvolume === undefined) {
-            this.mutedvolume = this.gain.gain.value;
-            this.gain.gain.value = 0.0;
+            this.mutedvolume = this.volume;
+            this.volume = 0.0;
         }
         else {
-            this.gain.gain.value = this.mutedvolume;
+            this.volume = this.mutedvolume;
             this.mutedvolume = undefined;
         }
     }
 
+    set phase(phase) {
+        this.sampler.setPhase(phase);
+    }
+
+    get phase() {
+        return this.sampler.getPhase();
+    }
 }
 
 
+let synth = new GibberishSamplerSynth();
 
-let synth = new WavetableSynth(800*600);
 
 const Marquee = () => {
     return {
@@ -109,73 +115,7 @@ const Marquee = () => {
     };
 };
 
-let img;
-
-
-const picture = function(p) {
-
-    // let img;
-
-    const keyDownActions = new Map(
-        [
-            /* use e, d, s, f to resize the marquee */
-
-            [/* s */ 83, () => marquee.rx = p.max(marquee.rx - 1, 1)],
-            [/* f */ 70, () => marquee.rx = p.min(marquee.rx + 1, 100)],
-            [/* d */ 68, () => marquee.ry = p.max(marquee.ry - 1, 1)],
-            [/* e */ 69, () => marquee.ry = p.min(marquee.ry + 1, 100)],
-
-            /* use -, =, 0 to adjust the pitch */
-
-            [/* - */ 189, () => synth.pitch.value -= 1/16 ],
-            [/* = */ 187, () => synth.pitch.value += 1/16 ],
-            // [/* - */ 189, () => synth.pitch.value *= ROOTXOF2 ],
-            // [/* = */ 187, () => synth.pitch.value *= 1/ROOTXOF2 ],
-            [/* 0 */ 48, () => synth.pitch.value = synth.DEFAULT_PITCH ],
-
-            /* use r, g, b to specify the sonification channel */
-            [/* r */ 82, () => synth.readOffset = 0 ],
-            [/* r */ 71, () => synth.readOffset = 1 ],
-            [/* r */ 66, () => synth.readOffset = 2 ]
-        ]);
-
-    p.preload = function() {
-        img = p.loadImage('Philips_PM5544.svg.png');
-    };
-
-    p.setup = function() {
-        let canvas = p.createCanvas(800,600);
-
-        p.image(img, 0, 0);
-    };
-
-    p.draw = () => {
-        p.image(img, 0, 0);
-
-        for (let [key, action] of keyDownActions) {
-            if (p.keyIsDown(key)) {
-                action();
-                captureMarqueArea();
-                break;
-            }
-        }
-
-        p.noFill();
-        p.stroke('white');
-        p.strokeWeight(1);
-        p.rect(...marquee.area(p.mouseX, p.mouseY));
-    };
-
-    p.mouseMoved = () => {
-        captureMarqueArea();
-    };
-
-    const captureMarqueArea = () => {
-        marquee.img = img.get(...marquee.area(p.mouseX, p.mouseY));
-        play();
-    };
-
-};
+const marquee = Marquee();
 
 
 const controls = function(p) {
@@ -189,14 +129,166 @@ const controls = function(p) {
 
     p.draw = () => {
         if (marquee.img) {
+            p.clear();
             p.image(marquee.img, 0, 0, marquee.img.width*2, marquee.img.height*2 );
+
+            let relativePhase = synth.phase / synth.sampler.length;
+
+            let scannerIndex = relativePhase * (marquee.img.width*marquee.img.height*2*2);
+            let x = scannerIndex % (marquee.img.width*2);
+            let y = scannerIndex / (marquee.img.width*2);
+
+            p.stroke('white');
+            p.strokeWeight(1);
+            p.rect(x, y, 2, 2);
+
         }
     };
 };
 
+const picture = function(p) {
+
+    let img;
+    let domRect;
+
+    const keyDownActions = new Map(
+        [
+            /* use e, d, s, f to resize the marquee */
+
+            [/* s */ 83, () => marquee.rx = p.max(marquee.rx - 1, 1)],
+            [/* f */ 70, () => marquee.rx = p.min(marquee.rx + 1, 100)],
+            [/* d */ 68, () => marquee.ry = p.max(marquee.ry - 1, 1)],
+            [/* e */ 69, () => marquee.ry = p.min(marquee.ry + 1, 100)],
+
+            /* use r, g, b to specify the sonification channel */
+
+            [/* r */ 82, () => synth.readOffset = 0 ],
+            [/* r */ 71, () => synth.readOffset = 1 ],
+            [/* r */ 66, () => synth.readOffset = 2 ],
+
+            /* use [, ], p to decrease/increase/reset the pitch */
+
+            [/* [ */ 219, () => synth.pitch = p.max(1/1024, synth.pitch - 1/1024) ],
+            [/* ] */ 221, () => synth.pitch += 1/1024 ],
+            [/* p */ 80, () => synth.pitch = synth.DEFAULT_PITCH ]
+
+        ]);
 
 
-window.synth = synth;
+    p.preload = function() {
+        // img = p.loadImage('Philips_PM5544.svg.png');
+        // img = p.loadImage('bg.jpg');
+        // img = p.loadImage('DSC_6257.JPG');
+        // img = p.loadImage('DSC_6263.JPG');
+        // img = p.loadImage('IMG_20170402_120844.jpg');
+        img = p.loadImage('Wassily Kandinsky composizione viii, c.1923.jpg');
+    };
+
+    p.setup = function() {
+        let canvas = p.createCanvas(800,600);
+
+        // TODO: doesn't work -- see #HACK in mouseMoved() below
+        //domRect = canvas.getBoundingClientRect();
+
+        p.image(img, 0, 0);
+        img.resize(800,600);
+
+        drawMarquee();
+    };
+
+
+    const actOnKeyDown = () => {
+        for (let [key, action] of keyDownActions) {
+            if (p.keyIsDown(key)) {
+                action();
+                captureMarquee();
+                break;
+            }
+        }
+    };
+
+
+    p.draw = () => {
+        p.image(img, 0, 0);
+
+        actOnKeyDown();
+
+        drawMarquee();
+    };
+
+    p.mouseMoved = () => {
+        // if (p.mouseX < domRect.right && p.mouseY < domRect.bottom)
+        // #HACK
+        if (p.mouseX < 800 && p.mouseY < 600)
+            captureMarquee();
+    };
+
+    const drawMarquee = () => {
+        p.noFill();
+        p.stroke('white');
+        p.strokeWeight(1);
+        p.rect(...marquee.area(p.mouseX, p.mouseY));
+    };
+
+    const captureMarquee = () => {
+        marquee.img = img.get(...marquee.area(p.mouseX, p.mouseY));
+        play();
+    };
+
+};
+
+
+
+const waveform = (p) => {
+
+    p.setup = () => {
+        let canvas = p.createCanvas(300,200);
+    };
+
+
+    p.draw = () => {
+        p.background(0);
+
+        let spectrum = fft.analyze();
+        p.noStroke();
+        p.fill(255,0,0); // spectrum is red
+        for (let i = 0; i< spectrum.length; i++){
+            let x = p.map(i, 0, spectrum.length, 0, p.width);
+            let h = -p.height + p.map(spectrum[i], 0, 255, p.height, 0);
+            p.rect(x, p.height, p.width / spectrum.length, h );
+        }
+
+
+        let waveform = fft.waveform();
+        p.noFill();
+        p.beginShape();
+        p.stroke(0,255,0); // waveform is green
+        p.strokeWeight(1);
+        for (let i = 0; i< waveform.length; i++){
+            let x = p.map(i, 0, waveform.length, 0, p.width);
+            let y = p.map( waveform[i], -1, 1, 0, p.height);
+            p.vertex(x,y);
+        }
+        p.endShape();
+    };
+
+
+};
+
+
+function addRampEffect(wavetable) {
+    let ramplength = wavetable.length * 0.01;
+    let rampstep = 1/ramplength;
+
+    for (let i=0, dampen = rampstep; i<ramplength; i++, dampen+=rampstep) {
+        wavetable[i] *= dampen;
+        wavetable[wavetable.length-1 - i] *= dampen;
+    }
+
+    return wavetable;
+}
+
+
 
 function play() {
 
@@ -204,17 +296,23 @@ function play() {
     let pixels = marquee.img.pixels;
 
     let wavetable = [];
+    // let avgpower = 0;
     for (let i=synth.readOffset, j=0; i<pixels.length; i+=4, j++) {
         wavetable[j] = pixels[i] / 256;
+        // wavetable[j] = pixels[i];
+        // avgpower += pixels[i];
     }
 
-    synth.wavetable = [wavetable, wavetable];
-    console.log("in play");
-    console.log(window.synth.volume + ", " + window.synth.pitch);
+
+    // avgpower /= wavetable.length;
+    // wavetable = wavetable.map(x => x/avgpower);
+
+    synth.wavetable = addRampEffect(wavetable);
 }
 
 
-const marquee = Marquee();
 
-new p5(picture, "leftpane");
-new p5(controls, "rightpane");
+
+new p5(picture, "picture");
+new p5(controls, "marquee");
+new p5(waveform, "waveform");
